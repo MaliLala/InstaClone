@@ -10,7 +10,13 @@ const postsService = (fastify: FastifyInstance) => {
       const post = fastify.transactions.posts.create(postData);
       return post;
     },
+    getAll: async () => {
+      fastify.log.info(`Getting all posts`);
+      const posts = fastify.transactions.posts.getAll(); // this should be defined in your mock or real service
+      return posts;
+    },
   };
 };
+
 
 export { postsService };

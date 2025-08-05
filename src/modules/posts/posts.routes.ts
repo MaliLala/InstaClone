@@ -5,6 +5,11 @@ import { CreatePostDto } from "./posts.types";
 const postsRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   const service = postsService(fastify);
 
+  fastify.get("/posts", async (_request, reply) => {
+    const posts = await service.getAll();
+    return reply.send(posts);
+  });
+
   fastify.post<{ Body: CreatePostDto }>("/posts", async (request, reply) => {
     const newPost = await service.create(request.body);
 
