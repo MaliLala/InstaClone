@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import { reelsRoutes } from "./reels.routes";
+import { CreateReelDto } from './reels.types';
 
 describe("GET /reels/grid", () => {
   it("should return a list of reels with a 200 status code", async () => {
@@ -27,16 +28,21 @@ describe("GET /reels/grid", () => {
 
     // To satisfy TypeScript, our mock must match the full shape of the
     // 'transactions' dependency, including all methods on 'posts'.
-    app.decorate("transactions", {
-      posts: {
-        create: jest.fn(),
-        getAll: jest.fn(),
-        getById: jest.fn(),
-      },
-      reels: {
-        getAll: jest.fn().mockReturnValue(mockReels),
-      },
-    });
+   app.decorate("transactions", {
+  posts: {
+    create: jest.fn(),
+    getAll: jest.fn(),
+    getById: jest.fn(),
+  },
+  reels: {
+    create: jest.fn() as jest.Mock<(data: CreateReelDto) => unknown>,
+    getAll: jest.fn().mockReturnValue(mockReels),
+  },
+  highlights: {
+    getById: jest.fn(),
+    getAll: jest.fn().mockReturnValue([]),
+  },
+});
 
     app.register(reelsRoutes);
 
