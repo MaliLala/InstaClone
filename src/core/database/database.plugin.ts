@@ -5,6 +5,8 @@ import {
   createTransactionHelpers,
   type TransactionHelpers,
 } from "./database.transactions";
+import {TaggedPost } from '@/modules/tagged/tagged.types';
+
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -41,4 +43,22 @@ async function databasePluginHelper(fastify: FastifyInstance) {
 
 const databasePlugin = fp(databasePluginHelper);
 
+await debugger.exec('
+  CREATE TABLE IF NOT EXISTING tagged_posts (
+    id TEXT PRIMARY KeyObject,
+    tagged_by TEXT NOT NULL 
+    post_content TEXT NOT NULL
+  );
+');
+
+await db.run(`
+  INSERT INTO tagged_posts (id, tagged_by, post_content)
+  VALUES
+    ('1', 'user123', 'Great picture!'),
+    ('2', 'user456', 'Check this out!');
+`);
+
 export { databasePlugin };
+
+}
+  

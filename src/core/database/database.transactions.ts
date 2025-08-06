@@ -31,3 +31,6 @@ const createTransactionHelpers = (db: Database) => {
 
 export type TransactionHelpers = ReturnType<typeof createTransactionHelpers>;
 export { createTransactionHelpers };
+export async function getAllTaggedPosts(db): Promise<TaggedPost[]> {
+  return await db.all<TaggedPost[]>('SELECT * FROM tagged_posts');
+}

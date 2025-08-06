@@ -19,6 +19,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../insta-clone-react-frontend/src/tagged"],
   "exclude": ["node_modules", "tests", "build", ".eslint.config.mjs"]
 }
