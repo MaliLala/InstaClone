@@ -8,12 +8,12 @@
     "outDir": "./build",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": "./",
+    "baseUrl": "./src",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "paths": {
-      "src/*": ["src/*"]
+       "@/*": ["*"]
     },
     "skipLibCheck": true,
     "experimentalDecorators": true,

@@ -1,9 +1,16 @@
+// jest.config.js
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  testMatch: ['**/src/**/*.test.ts'],
   moduleNameMapper: {
-    "^src/(.*)$": "<rootDir>/src/$1",
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   modulePathIgnorePatterns: ["<rootDir>/build/"],
+  globals: {
+    'ts-jest': {
+      tsconfig: './tsconfig.json',
+    },
+  },
 };

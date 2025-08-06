@@ -29,6 +29,13 @@ async function databasePluginHelper(fastify: FastifyInstance) {
   );
 `);
 
+ db.exec(`
+   CREATE TABLE IF NOT EXISTS tagged_posts (
+    id TEXT PRIMARY KEY,
+    tagged_by TEXT NOT NULL,
+    post_content TEXT NOT NULL
+  );
+`);
   const transactions = createTransactionHelpers(db);
 
   fastify.decorate("db", db);
@@ -39,26 +46,23 @@ async function databasePluginHelper(fastify: FastifyInstance) {
     instance.log.info("SQLite database connection closed.");
     done();
   });
+
+  db.prepare(`
+    INSERT INTO tagged_posts (id, tagged_by, post_content)
+    VALUES (?, ?, ?);
+  `).run('1', 'user123', 'Great picture!');
+
+  db.prepare(`
+    INSERT INTO tagged_posts (id, tagged_by, post_content)
+    VALUES (?, ?, ?);
+  `).run('2', 'user456', 'Check this out!');
+
 }
+
 
 const databasePlugin = fp(databasePluginHelper);
 
-await debugger.exec('
-  CREATE TABLE IF NOT EXISTING tagged_posts (
-    id TEXT PRIMARY KeyObject,
-    tagged_by TEXT NOT NULL 
-    post_content TEXT NOT NULL
-  );
-');
 
-await db.run(`
-  INSERT INTO tagged_posts (id, tagged_by, post_content)
-  VALUES
-    ('1', 'user123', 'Great picture!'),
-    ('2', 'user456', 'Check this out!');
-`);
 
 export { databasePlugin };
 
-}
-  

@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { fetchTaggedPosts } from './tagged.service';
+import { fetchTaggedPosts } from './tagged.services';
 import { TaggedPostSchema } from './tagged.types';
 
 export async function taggedRoutes(fastify: FastifyInstance) {
