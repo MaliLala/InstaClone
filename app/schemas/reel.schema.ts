@@ -5,7 +5,7 @@ const reelSchema = z.object({
     video_url: z.string().url(),
     thumbnail_url: z.string().url(),
     caption: z.string().optional(),
-    views: z.number().int().min(),
+    views: z.number().int().min(0),
     created_at: z.string(),
 });
 
