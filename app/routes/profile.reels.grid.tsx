@@ -1,7 +1,7 @@
 import { useLoaderData } from "react-router";
-import { api } from "~/services/api";
-import { reelsSchema, type Reel } from "~/schemas/reel.schema";
-import { ReelGridItem } from "~/components/ReelGridItem";
+import { api } from "../services/api";
+import { reelsSchema, type Reel } from "../schemas/reel.schema";
+import { ReelGridItem } from "../components/ReelGridItem";
 
 export async function loader() {
   try {

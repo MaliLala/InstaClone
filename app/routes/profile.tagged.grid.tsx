@@ -1,14 +1,15 @@
 import React from 'react';
 import { useLoaderData, type LoaderFunctionArgs } from 'react-router';
 import { Link } from 'react-router-dom';
+import type { Post } from " @/modules/posts/posts.types ";
 
 // Define the Post type to help TypeScript with type checking.
 // This should be placed near the top of the file, after the imports.
-type Post = {
-  id: string;
-  imageUrl: string;
-  caption: string;
-};
+//type Post = {
+  //id: string;
+  //imageUrl: string;
+  //caption: string;
+//};
 
 // This is a mock API service for demonstration purposes.
 // In a real application, you would import your actual API service.
@@ -32,7 +33,7 @@ const api = {
 
 // This is a reusable component for displaying a single post card.
 // It's styled to be responsive and visually appealing with a hover effect.
-function PostCard({ post }: { post: Post })
+function PostCard({ post }: { post: Post }){
   return (
     <div className="relative overflow-hidden rounded-lg shadow-lg aspect-square group">
       {/* The post image, which scales up on hover */}

@@ -1,4 +1,4 @@
-import type { Reel } from "~/schemas/reel.schema";
+import type { Reel } from "../schemas/reel.schema";
 
 export function ReelGridItem({ reel }: { reel: Reel }) {
   return (

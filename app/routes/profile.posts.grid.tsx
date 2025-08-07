@@ -1,7 +1,7 @@
 import { useLoaderData } from "react-router";
-import { api } from "~/services/api";
-import { postsSchema } from "~/schemas/post.schema";
-import { PostCard } from "~/components/PostCard";
+import { api } from "../services/api";
+import { postsSchema } from "../schemas/post.schema";
+import { PostCard } from "../components/PostCard";
 
 export async function loader() {
     try{

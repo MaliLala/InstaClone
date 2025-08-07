@@ -1,5 +1,5 @@
 import { useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { api } from "~/services/api";
+import { api } from "../services/api";
 // Assume you have a highlight schema and a HighlightStory component
 // import { highlightSchema, type Highlight } from "~/schemas/highlight.schema";
 // import { HighlightStory } from "~/components/HighlightStory";

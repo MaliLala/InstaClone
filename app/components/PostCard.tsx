@@ -1,4 +1,4 @@
-import type { Post } from "~/schemas/post.schema";
+import type { Post } from "../schemas/post.schema";
 
 export function PostCard({ post }: { post: Post }) {
   return (
