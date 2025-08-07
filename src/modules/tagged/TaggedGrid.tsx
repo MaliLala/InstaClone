@@ -2,16 +2,24 @@ import { useEffect, useState } from "react";
 import { getTaggedPosts } from "./tagged.api";
 import type { TaggedPost } from "./tagged.types";
 
+/**
+ * TaggedGrid component
+ * - Fetches and displays tagged posts in a responsive grid.
+ * - Shows a loading state and a message if no tagged posts are available.
+ * - Each post shows its image and a caption overlay on hover, Instagram-style.
+ */
 export function TaggedGrid() {
+  // Local state for tagged posts and loading status
   const [posts, setPosts] = useState<TaggedPost[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch tagged posts on component mount
   useEffect(() => {
     getTaggedPosts()
       .then(setPosts)
       .catch((err) => {
         console.error("Error loading tagged posts", err);
-        setPosts([]);
+        setPosts([]); // fallback to empty array on error
       })
       .finally(() => setLoading(false));
   }, []);
@@ -24,16 +32,24 @@ export function TaggedGrid() {
       ) : posts.length === 0 ? (
         <p className="text-center text-gray-500">No tagged posts available.</p>
       ) : (
+        // Responsive grid of tagged post cards
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {posts.map((post) => (
-            <div key={post.id} className="relative aspect-square overflow-hidden rounded-lg group shadow-md">
+            <div
+              key={post.id}
+              className="relative aspect-square overflow-hidden rounded-lg group shadow-md"
+            >
+              {/* Tagged post image with hover-zoom effect */}
               <img
                 src={post.imageUrl}
                 alt={post.caption}
                 className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
               />
+              {/* Caption overlay, appears on hover */}
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <p className="text-white text-sm font-medium p-2 text-center">{post.caption}</p>
+                <p className="text-white text-sm font-medium p-2 text-center">
+                  {post.caption}
+                </p>
               </div>
             </div>
           ))}

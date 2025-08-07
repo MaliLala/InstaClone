@@ -1,7 +1,7 @@
 import { useLoaderData } from "react-router";
 import { api } from "../services/api";
 import { reelsSchema, type Reel } from "../schemas/reels.schema";
-import { ReelGridItem } from "../components/ReelGridItem";
+import { ReelsList } from "../components/ReelsList";
 
 export async function loader() {
   try {
@@ -14,7 +14,7 @@ export async function loader() {
   }
 }
 
-export default function ProfileReelsGrid() {
+export default function ProfileReelsPage() {
   const reels = useLoaderData() as Reel[];
 
   if (!reels || reels.length === 0) {
@@ -22,10 +22,9 @@ export default function ProfileReelsGrid() {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2 max-w-lg mx-auto p-2">
-      {reels.map((reel) => (
-        <ReelGridItem key={reel.id} reel={reel} />
-      ))}
+    <div className="max-w-lg mx-auto p-4">
+      <h2 className="text-xl font-bold mb-2">My Reels</h2>
+      <ReelsList reels={reels} />
     </div>
   );
 }

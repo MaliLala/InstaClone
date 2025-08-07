@@ -1,7 +1,8 @@
 import React from 'react';
 import { useLoaderData, type LoaderFunctionArgs } from 'react-router';
 import { Link } from 'react-router-dom';
-import type { Post } from " @/modules/posts/posts.types ";
+import type { Post } from "../schemas/post.schema";
+import { taggedPostsSchema, type TaggedPost } from "../schemas/tagged.schema";
 
 // Define the Post type to help TypeScript with type checking.
 // This should be placed near the top of the file, after the imports.
@@ -38,8 +39,8 @@ function PostCard({ post }: { post: Post }){
     <div className="relative overflow-hidden rounded-lg shadow-lg aspect-square group">
       {/* The post image, which scales up on hover */}
       <img
-        src={post.imageUrl}
-        alt={post.caption}
+        src={post.img_url}
+        alt={post.caption ?? ""}
         className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
       />
       {/* The caption overlay, which appears on hover */}
@@ -50,26 +51,29 @@ function PostCard({ post }: { post: Post }){
   );
 }
 
-// The loader function is responsible for fetching data before the component renders.
-// It's an async function that uses the api service to get tagged posts.
-export async function loader({ params }: LoaderFunctionArgs) {
-  try {
-    // Make the API call to your backend endpoint for tagged posts.
-    const response = await api.get('/tagged/grid');
-    // Return the data to the component.
-    return response.data;
-  } catch (error) {
-    console.error("Failed to load tagged posts:", error);
-    // If the API call fails, throw a new Response with an appropriate status code.
-    throw new Response("Failed to load tagged posts", { status: 500 });
-  }
+export async function loader({ params }: LoaderFunctionArgs): Promise<Post[]> {
+  const { data } = await api.get('/tagged/grid');
+
+  // Map raw tagged-post objects into your Post shape
+ const rawPosts = data as Array<{
+    id: string;
+    imageUrl: string;
+    caption: string;
+  }>;
+  
+  return rawPosts.map(({ id, imageUrl, caption }) => ({
+    id:         Number(id),               // string → number
+    img_url:    imageUrl,                 // rename to match schema
+    caption:    caption,                  // stays a string
+    created_at: new Date().toISOString(), // placeholder timestamp
+  }));
 }
 
 // This is the main component for the route.
 // It displays the title and the grid of posts.
 export default function TaggedGridRoute() {
   // The useLoaderData hook retrieves the data returned by the loader function.
-  const posts = useLoaderData();
+  const posts = useLoaderData<Post[]>();
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
