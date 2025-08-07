@@ -35,12 +35,14 @@ describe("GET /reels/grid", () => {
     getById: jest.fn(),
   },
   reels: {
-    create: jest.fn() as jest.Mock<(data: CreateReelDto) => unknown>,
+    getById: jest.fn().mockReturnValue(mockReels),
     getAll: jest.fn().mockReturnValue(mockReels),
+    create: jest.fn().mockReturnValue(mockReels) as any
   },
   highlights: {
     getById: jest.fn(),
     getAll: jest.fn().mockReturnValue([]),
+    create:  jest.fn(),
   },
 });
 

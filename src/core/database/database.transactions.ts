@@ -1,61 +1,78 @@
 import type { Database } from "better-sqlite3";
-import { CreatePostDto } from '@/modules/posts/posts.types';
-import { TaggedPost } from '@/modules/tagged/tagged.types';
-import { Highlight } from '@/modules/highlights/highlights.types';
-import { CreateReelDto, Reel } from '@/modules/reels/reels.types'; // ADD 'Reel' here
+import { CreatePostDto }   from "@/modules/posts/posts.types";
+import { TaggedPost }      from "@/modules/tagged/tagged.types";
+import {CreateHighlightDto, Highlight, } from "@/modules/highlights/highlights.types";
+import { CreateReelDto, Reel } from "@/modules/reels/reels.types";
 
-// This factory function creates and returns our transaction helpers.
-const createTransactionHelpers = (db: Database) => {
-  // We use prepared statements for security and performance.
+export const createTransactionHelpers = (db: Database) => {
+  // 1) Prepare all statements, including the new ones
   const statements = {
-    getPostById: db.prepare("SELECT * FROM posts WHERE id = ?"),
-    getAllPosts: db.prepare("SELECT * FROM posts"),
-    createPost: db.prepare(
-      "INSERT INTO posts (img_url, caption) VALUES (@img_url, @caption) RETURNING *"
-    ),
-    getAllTaggedPostsStmt: db.prepare("SELECT * FROM tagged_posts"),
-    getAllHighlightsStmt: db.prepare("SELECT * FROM highlights"),
-    getHighlightByIdStmt: db.prepare("SELECT * FROM highlights WHERE id = ?"),
-    createReelStmt: db.prepare(
-      "INSERT INTO reels (video_url, caption) VALUES (@video_url, @caption) RETURNING *"
-    ),
-    getAllReelsStmt: db.prepare("SELECT * FROM reels"),
+    // Posts
+    getPostById:        db.prepare("SELECT * FROM posts WHERE id = ?"),
+    getAllPosts:        db.prepare("SELECT * FROM posts"),
+    createPost:         db.prepare(
+                          "INSERT INTO posts (img_url, caption) VALUES (@img_url, @caption) RETURNING *"
+                        ),
+
+    // Tagged
+    getAllTaggedPosts:  db.prepare("SELECT * FROM tagged_posts"),
+
+    // Highlights (added create)
+    getAllHighlights:   db.prepare("SELECT * FROM highlights"),
+    getHighlightById:   db.prepare("SELECT * FROM highlights WHERE id = ?"),
+    createHighlight:    db.prepare(
+                          "INSERT INTO highlights (cover_image_url, title) VALUES (@cover_image_url, @title) RETURNING *"
+                        ),
+
+    // Reels (added getById)
+    createReel:         db.prepare(
+                          "INSERT INTO reels (video_url, caption) VALUES (@video_url, @caption) RETURNING *"
+                        ),
+    getAllReels:        db.prepare("SELECT * FROM reels"),
+    getReelById:        db.prepare("SELECT * FROM reels WHERE id = ?"),
   };
 
+  // 2) Wire up resource helper objects
   const posts = {
     getById: (id: number) => {
-      return statements.getPostById.get(id);
+      return statements.getPostById.get(id) as CreatePostDto & { id: number };
     },
     getAll: () => {
-      return statements.getAllPosts.all();
+      return statements.getAllPosts.all() as (CreatePostDto & { id: number })[];
     },
     create: (data: CreatePostDto) => {
-      return statements.createPost.get(data);
+      return statements.createPost.get(data) as CreatePostDto & { id: number };
     },
   };
 
   const highlights = {
     getAll: () => {
-      return statements.getAllHighlightsStmt.all() as Highlight[];
+      return statements.getAllHighlights.all() as Highlight[];
     },
     getById: (id: string) => {
-      return statements.getHighlightByIdStmt.get(id) as Highlight | undefined;
+      return statements.getHighlightById.get(id) as Highlight | undefined;
+    },
+    create: (data: CreateHighlightDto) => {
+      return statements.createHighlight.get(data) as Highlight;
     },
   };
 
-  const reels = { // NEW: Reels helper object
+  const reels = {
     create: (data: CreateReelDto) => {
-      return statements.createReelStmt.get(data);
+      return statements.createReel.get(data) as Reel;
     },
-    getAll: () => { // NEW: getAll method for reels
-      return statements.getAllReelsStmt.all() as Reel[];
+    getAll: () => {
+      return statements.getAllReels.all() as Reel[];
+    },
+    getById: (id: number) => {
+      return statements.getReelById.get(id) as Reel | undefined;
     },
   };
 
   return {
     posts,
     highlights,
-    reels, 
+    reels,
   };
 };
 
@@ -65,24 +82,25 @@ declare module "fastify" {
   interface FastifyInstance {
     db: Database;
     transactions: TransactionHelpers;
-   
   }
 }
 
-export { createTransactionHelpers };
-
+// helper functions for tagged/highlights if you still need them standalone
 export async function getAllTaggedPosts(db: Database): Promise<TaggedPost[]> {
-  return db.prepare('SELECT * FROM tagged_posts').all() as TaggedPost[];
-
+  return db.prepare("SELECT * FROM tagged_posts").all() as TaggedPost[];
 }
-// Export the new highlight functions
+
 export async function getAllHighlights(db: Database): Promise<Highlight[]> {
-  // Assuming 'highlights' table exists and has data matching Highlight type
-  return db.prepare('SELECT * FROM highlights').all() as Highlight[];
+  return db.prepare("SELECT * FROM highlights").all() as Highlight[];
 }
 
-export async function getHighlightById(db: Database, id: string): Promise<Highlight | undefined> {
-  // Assuming 'highlights' table exists and has data matching Highlight type
-  return db.prepare('SELECT * FROM highlights WHERE id = ?').get(id) as Highlight | undefined;
-
+export async function getHighlightById(
+  db: Database,
+  id: string
+): Promise<Highlight | undefined> {
+  return (
+    db.prepare("SELECT * FROM highlights WHERE id = ?").get(id) as
+      | Highlight
+      | undefined
+  );
 }

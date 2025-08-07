@@ -13,12 +13,23 @@ describe("POST /posts", () => {
     const createdPost = { ...newPostPayload, id: 1 };
 
     app.decorate("transactions", {
-      posts: {
-        getById: jest.fn(),
-        getAll: jest.fn(),
-        create: jest.fn().mockReturnValue(createdPost),
-      },
-    });
+  posts: {
+    getById: jest.fn(),
+    getAll: jest.fn(),
+    create: jest.fn().mockReturnValue(createdPost),
+  },
+  reels: {
+    // You'll need to define this function, even if it's a mock
+    getById: jest.fn(), 
+    getAll: jest.fn(),
+    create: jest.fn(),
+  },
+  highlights: {
+    getById: jest.fn(),
+    getAll: jest.fn(),
+    create: jest.fn(),
+  },
+});
 
     app.register(postsRoutes);
 

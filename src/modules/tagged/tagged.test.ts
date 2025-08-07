@@ -1,7 +1,7 @@
-import { build } from '@/app';
+import Fastify from "fastify";
 
 test('GET /tagged/grid returns an array of tagged posts', async () => {
-    const app = await build();
+    const app = await Fastify();
     
     const res = await app.inject({
         method: 'GET',
