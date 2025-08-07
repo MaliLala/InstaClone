@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "typeRoots": ["./node_modules/@types", "./types"]
+    "typeRoots": ["./node_modules/@types", "./types"],
     "module": "CommonJS",
     "moduleResolution": "node",
     "target": "ESNext",
@@ -20,6 +20,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*", "types/**/*", "../insta-clone-react-frontend/src/tagged"],
+  "include": ["src/**/*", "src/types/**/*", "types/**/*", "../insta-clone-react-frontend/src/tagged"],
   "exclude": ["node_modules", "tests", "build", ".eslint.config.mjs"]
 }

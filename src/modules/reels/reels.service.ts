@@ -12,3 +12,9 @@ const reelsService = (fastify: FastifyInstance) => {
 };
 
 export { reelsService };
+
+export async function getAllReels(fastify: FastifyInstance) {
+  const rows = fastify.db.prepare("SELECT * FROM reels ORDER BY created_at DESC").all();
+  return rows;
+}
+
