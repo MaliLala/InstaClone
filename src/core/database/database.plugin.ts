@@ -1,39 +1,30 @@
-import type { FastifyInstance } from 'fastify';
-import fp from 'fastify-plugin';
-// This import is for the type information used in the interface
-import type { Database as DatabaseType } from 'better-sqlite3';
-// This is a dynamic import that brings in the constructor function
-const Database = require('better-sqlite3');
+import type { FastifyInstance, FastifyPluginAsync } from "fastify";
+import fp from "fastify-plugin";
+import type { Database as DatabaseType } from "better-sqlite3";
+const Database = require("better-sqlite3") as new (file: string) => DatabaseType;
+
 import {
   createTransactionHelpers,
   type TransactionHelpers,
-} from './database.transactions';
-import { TaggedPost } from '@/modules/tagged/tagged.types';
+} from "./database.transactions";
 
-declare module 'fastify' {
+declare module "fastify" {
   interface FastifyInstance {
     /** The Better-SQLite3 database handle */
-    db: DatabaseType; // Correctly using the imported type
+    db: DatabaseType;
     /** A collection of helper methods for transactions */
     transactions: TransactionHelpers;
   }
 }
 
-/**
- * Fastify plugin that
- * 1. Opens a SQLite DB,
- * 2. Ensures tables exist (posts, tagged_posts, reels, highlights),
- * 3. Seeds some sample data,
- * 4. Exposes `fastify.db` and `fastify.transactions`,
- * 5. Closes the DB on server shutdown.
- */
-async function databasePluginHelper(fastify: FastifyInstance) {
-  // 1) open or create the database file
-  // Now this works because Database is the constructor from the require statement
-  const db = new Database('./database.db');
-  fastify.log.info('SQLite database connection established.');
+const databasePluginHelper: FastifyPluginAsync = async (
+  fastify: FastifyInstance
+) => {
+  // 1) Open DB
+  const db: DatabaseType = new Database("./database.db");
+  fastify.log.info("SQLite database connection established.");
 
-  // 2) ensure all your tables exist
+  // 2) Create tables (idempotent)
   db.exec(`
     CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,9 +36,11 @@ async function databasePluginHelper(fastify: FastifyInstance) {
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS tagged_posts (
-      id TEXT PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      img_url TEXT NOT NULL,
+      caption TEXT,
       tagged_by TEXT NOT NULL,
-      post_content TEXT NOT NULL
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
@@ -55,43 +48,159 @@ async function databasePluginHelper(fastify: FastifyInstance) {
     CREATE TABLE IF NOT EXISTS reels (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       video_url TEXT NOT NULL,
+      thumbnail_url TEXT NOT NULL,
       caption TEXT,
+      views INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS highlights (
-      id TEXT PRIMARY KEY,
-      cover_image_url TEXT NOT NULL,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      cover_image_url TEXT NOT NULL
     );
   `);
 
-  // 3) wire up your transaction helpers
-  const transactions = createTransactionHelpers(db);
+  // 3) Lightweight migrations for existing DBs
+  try {
+    const reelsCols = db
+      .prepare(`PRAGMA table_info(reels)`)
+      .all() as Array<{ name: string }>;
+    const have = new Set(reelsCols.map((c) => c.name));
 
-  // 4) decorate Fastify with them
-  fastify.decorate('db', db);
-  fastify.decorate('transactions', transactions);
+    if (!have.has("thumbnail_url")) {
+      db.exec(
+        `ALTER TABLE reels ADD COLUMN thumbnail_url TEXT NOT NULL DEFAULT ''`
+      );
+      fastify.log.info("Migrated: added reels.thumbnail_url");
+    }
+    if (!have.has("views")) {
+      db.exec(`ALTER TABLE reels ADD COLUMN views INTEGER NOT NULL DEFAULT 0`);
+      fastify.log.info("Migrated: added reels.views");
+    }
+  } catch (e) {
+    fastify.log.error(e, "Failed to run reels table migrations");
+  }
 
-  // 5) make sure to close it on shutdown
-  fastify.addHook('onClose', (instance, done) => {
-    instance.db.close();
-    instance.log.info('SQLite database connection closed.');
-    done();
+  // 4) Seed data if empty
+  const seedIfEmpty = (
+    table: string,
+    countQuery: string,
+    seedFn: () => void
+  ) => {
+    const { count } = db.prepare(countQuery).get() as { count: number };
+    if (count === 0) {
+      const tx = (db as any).transaction(seedFn);
+      tx();
+      fastify.log.info(`Seeded table: ${table}`);
+    }
+  };
+
+  // Highlights seed (your original)
+  seedIfEmpty(
+    "highlights",
+    `SELECT COUNT(*) AS count FROM highlights`,
+    () => {
+      const insert = db.prepare(
+        `INSERT INTO highlights (cover_image_url, title) VALUES (@cover_image_url, @title)`
+      );
+      const data = [
+        {
+          cover_image_url: "http://example.com/highlight1.jpg",
+          title: "Vacation",
+        },
+        {
+          cover_image_url: "http://example.com/highlight2.jpg",
+          title: "Work Moments",
+        },
+      ];
+      for (const row of data) insert.run(row);
+    }
+  );
+
+  // Posts seed
+  seedIfEmpty("posts", `SELECT COUNT(*) AS count FROM posts`, () => {
+    const insert = db.prepare(
+      `INSERT INTO posts (img_url, caption) VALUES (@img_url, @caption)`
+    );
+    const data = [
+      {
+        img_url: "https://picsum.photos/seed/insta1/800",
+        caption: "First post",
+      },
+      {
+        img_url: "https://picsum.photos/seed/insta2/800",
+        caption: "Another day, another pic",
+      },
+      { img_url: "https://picsum.photos/seed/insta3/800", caption: null },
+    ];
+    for (const row of data) insert.run(row);
   });
 
-  // 6) optional: seed a couple of tagged_posts
-  db.prepare(
-    `INSERT OR IGNORE INTO tagged_posts (id, tagged_by, post_content) VALUES (?, ?, ?);`
-  )
-    .run('1', 'user123', 'Great picture!');
-  db.prepare(
-    `INSERT OR IGNORE INTO tagged_posts (id, tagged_by, post_content) VALUES (?, ?, ?);`
-  )
-    .run('2', 'user456', 'Check this out!');
-}
+  // Tagged posts seed
+  seedIfEmpty(
+    "tagged_posts",
+    `SELECT COUNT(*) AS count FROM tagged_posts`,
+    () => {
+      const insert = db.prepare(
+        `INSERT INTO tagged_posts (img_url, caption, tagged_by) VALUES (@img_url, @caption, @tagged_by)`
+      );
+      const data = [
+        {
+          img_url: "https://picsum.photos/seed/tag1/800",
+          caption: "Tagged by Alice",
+          tagged_by: "alice",
+        },
+        {
+          img_url: "https://picsum.photos/seed/tag2/800",
+          caption: null,
+          tagged_by: "bob",
+        },
+        {
+          img_url: "https://picsum.photos/seed/tag3/800",
+          caption: "We were here!",
+          tagged_by: "charlie",
+        },
+      ];
+      for (const row of data) insert.run(row);
+    }
+  );
+
+  // Reels seed
+  seedIfEmpty("reels", `SELECT COUNT(*) AS count FROM reels`, () => {
+    const insert = db.prepare(
+      `INSERT INTO reels (video_url, thumbnail_url, caption, views)
+       VALUES (@video_url, @thumbnail_url, @caption, @views)`
+    );
+    const data = [
+      {
+        video_url: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+        thumbnail_url: "https://picsum.photos/seed/reel1/800/450",
+        caption: "Bunny!",
+        views: 123,
+      },
+      {
+        video_url: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+        thumbnail_url: "https://picsum.photos/seed/reel2/800/450",
+        caption: "Nature shot",
+        views: 456,
+      },
+    ];
+    for (const row of data) insert.run(row);
+  });
+
+  // 5) Decorate Fastify
+  const transactions = createTransactionHelpers(db);
+  fastify.decorate("db", db);
+  fastify.decorate("transactions", transactions);
+
+  fastify.addHook("onClose", (instance, done) => {
+    instance.db.close();
+    instance.log.info("SQLite database connection closed.");
+    done();
+  });
+};
 
 export const databasePlugin = fp(databasePluginHelper);
