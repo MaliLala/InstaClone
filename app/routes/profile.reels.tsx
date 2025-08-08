@@ -1,6 +1,6 @@
 import { useLoaderData } from "react-router";
 import { api } from "../services/api";
-import { reelsSchema, type Reel } from "../schemas/reels.schema";
+import { reelsSchema, type Reel } from "../schemas/reel.schema";
 import { ReelsList } from "../components/ReelsList";
 
 export async function loader() {
@@ -24,7 +24,7 @@ export default function ProfileReelsPage() {
   return (
     <div className="max-w-lg mx-auto p-4">
       <h2 className="text-xl font-bold mb-2">My Reels</h2>
-      <ReelsList reels={reels} />
+      <ReelsList />
     </div>
   );
 }

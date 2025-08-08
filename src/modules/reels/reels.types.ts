@@ -9,7 +9,7 @@ import { z } from "zod";
  */
 export const ReelSchema = z.object({
   id: z.number(),
-  imageUrl: z.string().url(),
+  videoUrl: z.string().url(),
   caption: z.string(),
   thumbnailUrl: z.string(),
   createdAt: z.string(),

@@ -22,3 +22,31 @@ export const ReelSchema = z.object({
  * TypeScript type for a single Reel, inferred from the Zod schema.
  */
 export type Reel = z.infer<typeof ReelSchema>;
+
+/**
+ * Async function to fetch all reels.
+ * This is an example stub; replace with your real API call or database fetch.
+ *
+ * Promise resolving to an array of Reel objects.
+ */
+export async function getAllReels(): Promise<Reel[]> {
+  return [
+    {
+      id: 1,
+      videoUrl: "https://example.com/video1.mp4",
+      thumbnailUrl: "https://example.com/thumb1.jpg",
+      caption: "Sample reel 1",
+      views: 123,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      videoUrl: "https://example.com/video2.mp4",
+      thumbnailUrl: "https://example.com/thumb2.jpg",
+      caption: "Sample reel 2",
+      views: 456,
+      createdAt: new Date().toISOString(),
+    },
+    // Add more reels or fetch dynamically
+  ];
+}

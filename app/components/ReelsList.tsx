@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getAllReels } from @/modules/reels/reels.services";
+import { getAllReels } from "@/modules/reels/reels.service";
 import type { Reel } from "@/modules/reels/reels.types";
 
 export function ReelsList() {
@@ -9,7 +9,7 @@ export function ReelsList() {
 
   useEffect(() => {
     getAllReels()
-      .then(setReels)
+      .then((data) => setReels(data as Reel[]))
       .catch((err) => setError(err.message || "Error"))
       .finally(() => setLoading(false));
   }, []);
@@ -24,7 +24,7 @@ export function ReelsList() {
       <ul>
         {reels.map((reel) => (
           <li key={reel.id}>
-            <video width={200} controls src={reel.video_url}></video>
+            <video width={200} controls src={reel.videoUrl}></video>
             <div>{reel.caption}</div>
           </li>
         ))}

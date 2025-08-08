@@ -8,6 +8,6 @@ import type { Post } from "./posts.types";
  */
 export function sortPostsByDate(posts: Post[]): Post[] {
   return [...posts].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 }
