@@ -1,60 +1,44 @@
 import { useEffect, useState } from "react";
-import { getTaggedPosts } from "./tagged.api";
 import type { TaggedPost } from "./tagged.types";
+import { getTaggedPosts } from "./tagged.api";
 
 /**
- * TaggedGrid component
- * - Fetches and displays tagged posts in a responsive grid.
- * - Shows a loading state and a message if no tagged posts are available.
- * - Each post shows its image and a caption overlay on hover, Instagram-style.
+ * 3-column grid of tagged posts with simple UX states.
  */
 export function TaggedGrid() {
-  // Local state for tagged posts and loading status
   const [posts, setPosts] = useState<TaggedPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch tagged posts on component mount
   useEffect(() => {
     getTaggedPosts()
       .then(setPosts)
-      .catch((err) => {
-        console.error("Error loading tagged posts", err);
-        setPosts([]); // fallback to empty array on error
-      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load tagged"))
       .finally(() => setLoading(false));
   }, []);
 
+  if (loading) return <div className="p-4 text-center">Loading tagged posts...</div>;
+  if (error) return <div className="p-4 text-center text-red-600">{error}</div>;
+  if (posts.length === 0) return <div className="p-4 text-center">No tagged posts.</div>;
+
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Tagged Posts</h2>
-      {loading ? (
-        <p className="text-center text-gray-500">Loading...</p>
-      ) : posts.length === 0 ? (
-        <p className="text-center text-gray-500">No tagged posts available.</p>
-      ) : (
-        // Responsive grid of tagged post cards
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {posts.map((post) => (
-            <div
-              key={post.id}
-              className="relative aspect-square overflow-hidden rounded-lg group shadow-md"
-            >
-              {/* Tagged post image with hover-zoom effect */}
-              <img
-                src={post.imageUrl}
-                alt={post.caption}
-                className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-              />
-              {/* Caption overlay, appears on hover */}
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <p className="text-white text-sm font-medium p-2 text-center">
-                  {post.caption}
-                </p>
-              </div>
+    <div className="grid grid-cols-3 gap-2 p-2">
+      {posts.map((p) => (
+        <div key={p.id} className="relative overflow-hidden rounded-lg shadow aspect-square group">
+          <img
+            src={p.imageUrl}
+            alt={p.caption ?? "tagged"}
+            className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+          />
+          {p.caption ? (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <p className="text-white text-sm font-semibold p-2 text-center">
+                {p.caption}
+              </p>
             </div>
-          ))}
+          ) : null}
         </div>
-      )}
+      ))}
     </div>
   );
 }

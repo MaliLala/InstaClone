@@ -1,24 +1,32 @@
 import { z } from "zod";
 
 /**
- * Zod schema for a single Reel object.
- * - `id`: Unique numeric identifier for the reel.
- * - `imageUrl`: URL to the reel's image or thumbnail (must be a valid URL).
- * - `caption`: Text caption for the reel (required).
- * - `createdAt`: ISO date string when the reel was created.
+ * Shape returned by backend /reels/grid.
+ * Backend maps:
+ *   video_url     -> videoUrl
+ *   thumbnail_url -> thumbnailUrl
+ *   created_at    -> createdAt
  */
 export const ReelSchema = z.object({
   id: z.number(),
   videoUrl: z.string().url(),
-  caption: z.string(),
-  thumbnailUrl: z.string(),
-  createdAt: z.string(),
-  views: z.number(), 
+  thumbnailUrl: z.string().url(),
+  caption: z.string().nullable().optional(),
+  views: z.number(),
+  createdAt: z.string()
 });
 
-// Define the schema for an array of reels by wrapping the single reel schema in z.array()
 export const ReelArraySchema = z.array(ReelSchema);
-
-//TypeScript type for a single Reel, inferred from the Zod schema.
- 
 export type Reel = z.infer<typeof ReelSchema>;
+
+/**
+ * DTO for creating a reel via POST /reels.
+ * We keep backend's expected field names explicit (snake_case).
+ */
+export const CreateReelDtoSchema = z.object({
+  video_url: z.string().url(),
+  thumbnail_url: z.string().url(),
+  caption: z.string().nullable().optional(),
+  views: z.number().default(0)
+});
+export type CreateReelDto = z.infer<typeof CreateReelDtoSchema>;

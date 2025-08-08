@@ -1,44 +1,23 @@
 import { z } from "zod";
 
 /**
- * Zod schema for a single Story within a highlight.
- * - `id`: Unique numeric identifier for the story.
- * - `image_url`: URL of the story image (must be a valid URL).
- * - `created_at`: ISO date string of when the story was created.
+ * These schemas are used by the /profile.highlights* routes.
+ * The backend normalizes highlight.id to string in the route layer.
  */
+
 export const storySchema = z.object({
-  id: z.number(),
-  image_url: z.string().url(),
-  created_at: z.string(), // ISO date string, e.g. "2025-08-07T12:00:00Z"
+  id: z.string(),
+  imageUrl: z.string().url(),
+  caption: z.string().nullable().optional()
 });
 
-/**
- * Zod schema for a single Highlight.
- * - `id`: Unique numeric identifier for the highlight.
- * - `title`: Title of the highlight.
- * - `cover_image`: URL of the cover image for the highlight (must be a valid URL).
- * - `stories`: Array of story objects belonging to this highlight.
- * - `created_at`: ISO date string when the highlight was created.
- */
 export const highlightSchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  cover_image: z.string().url(),
-  stories: z.array(storySchema),
-  created_at: z.string(), // ISO date string
+  id: z.string(),                    // normalized on the backend to avoid number/string mismatches
+  cover_image_url: z.string().url(), // backend column name is snake_case
+  title: z.string().min(1)
 });
 
-/**
- * Zod schema for an array of highlights.
- */
 export const highlightsSchema = z.array(highlightSchema);
 
-/**
- * TypeScript type for a single story (inferred from storySchema).
- */
 export type Story = z.infer<typeof storySchema>;
-
-/**
- * TypeScript type for a single highlight (inferred from highlightSchema).
- */
 export type Highlight = z.infer<typeof highlightSchema>;

@@ -1,19 +1,11 @@
 import type { Post } from "./posts.types";
+import { PostArraySchema } from "./posts.types";
+import { api } from "@app/services/api";
 
 /**
- * Fetches an array of posts from the backend API.
- * - Sends a GET request to `/posts/grid`.
- * - Throws an error if the response is not OK.
- * - Returns the parsed JSON array of Post objects.
- *
- * @returns {Promise<Post[]>} - Promise resolving to an array of posts.
+ * Fetch posts for the grid. Validated with Zod to catch shape drift.
  */
 export async function getPosts(): Promise<Post[]> {
-  const res = await fetch("/posts/grid");
-  if (!res.ok) {
-    // You can customize error handling/logging as needed
-    throw new Error("Failed to fetch posts");
-  }
-  // It's often a good idea to validate/parse with your Zod schema here for extra safety
-  return res.json();
+  const res = await api.get("/posts/grid");
+  return PostArraySchema.parse(res.data);
 }
